@@ -21,9 +21,11 @@ func DissembleChunk(ch chunk.Chunk) []string {
 
 func dissembleInstruction(ch chunk.Chunk, offset int) (string, int) {
 	code := ch.Code[offset]
-	switch (chunk.OpCode(code)) {
-		case chunk.OP_RETURN: return "OP_RETURN", 1
-		case chunk.OP_CONSTANT: return constantInstruction(ch, offset), 2
+	switch chunk.OpCode(code) {
+	case chunk.OP_RETURN:
+		return "OP_RETURN", 1
+	case chunk.OP_CONSTANT:
+		return constantInstruction(ch, offset), 2
 	}
 	panic(fmt.Sprintf("instruction not recognised: '%v'", ch))
 }

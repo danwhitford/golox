@@ -1,9 +1,6 @@
 package runlengthencoder
 
-import "fmt"
-
-
-type RunLengthEncoder struct{
+type RunLengthEncoder struct {
 	arr []int
 }
 
@@ -13,8 +10,8 @@ func (rle *RunLengthEncoder) Append(i int) {
 		return
 	}
 
-	if rle.arr[len(rle.arr) - 2] == i {
-		rle.arr[len(rle.arr) - 1] += 1
+	if rle.arr[len(rle.arr)-2] == i {
+		rle.arr[len(rle.arr)-1] += 1
 		return
 	}
 
@@ -27,7 +24,6 @@ func (rle *RunLengthEncoder) Get(idx int) int {
 	for i := 0; i < len(rle.arr); i += 2 {
 		winmax += rle.arr[i+1]
 
-		fmt.Println(winmin, winmax, idx)
 		if winmin <= idx && idx < winmax {
 			return rle.arr[i]
 		}

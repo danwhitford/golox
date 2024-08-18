@@ -13,7 +13,7 @@ func TestDissembleBasicChunk(t *testing.T) {
 	want := []string{
 		"0000 1 OP_RETURN",
 	}
-	got := DissembleChunk(ch)	
+	got := DissembleChunk(ch)
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("Mismatch (-want +got):\n%s", diff)
 	}
@@ -36,7 +36,7 @@ func TestDissembleConstantChunk(t *testing.T) {
 	}
 
 	got := DissembleChunk(ch)
-	
+
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("Mismatch (-want +got):\n%s", diff)
 	}
@@ -59,7 +59,7 @@ func TestLineNumbers(t *testing.T) {
 	}
 
 	got := DissembleChunk(ch)
-	
+
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("Mismatch (-want +got):\n%s", diff)
 	}
