@@ -1,6 +1,10 @@
 package chunk
 
 import (
+	"bytes"
+	"encoding/binary"
+	"fmt"
+
 	"github.com/danwhitford/golox/runlengthencoder"
 	"github.com/danwhitford/golox/value"
 )
@@ -34,5 +38,20 @@ func (ch *Chunk) AddConstant(value value.Value) byte {
 }
 
 func (ch *Chunk) WriteConstant(value value.Value, line int) {
-	panic("cba tbh")
+	ch.Constants = append(ch.Constants, value)
+	var constantIndex uint64 = uint64(len(ch.Constants) - 1)
+	if constantIndex <= 255 {
+		ch.WriteCode(OP_CONSTANT, line)
+		ch.WriteChunk(byte(constantIndex), line)
+	} else {
+		ch.WriteCode(OP_CONSTANT_LONG, line)
+		buf := new(bytes.Buffer)		
+		err := binary.Write(buf, binary.BigEndian, constantIndex)
+		if err != nil {
+			panic(fmt.Sprintf("failed to write constant, '%v'", value))
+		}
+		for _, b := range buf.Bytes() {
+			ch.WriteChunk(b, line)
+		}
+	}
 }

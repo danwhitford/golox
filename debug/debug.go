@@ -1,6 +1,8 @@
 package debug
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 
 	"github.com/danwhitford/golox/chunk"
@@ -26,8 +28,22 @@ func dissembleInstruction(ch chunk.Chunk, offset int) (string, int) {
 		return "OP_RETURN", 1
 	case chunk.OP_CONSTANT:
 		return constantInstruction(ch, offset), 2
+	case chunk.OP_CONSTANT_LONG:
+		return constantLongInstruction(ch, offset), 9
 	}
-	panic(fmt.Sprintf("instruction not recognised: '%v'", ch))
+	panic(fmt.Sprintf("instruction not recognised: '%v'", ch.Code[offset]))
+}
+
+func constantLongInstruction(ch chunk.Chunk, offset int) string {
+	var constIdx uint64
+	bb := ch.Code[offset+1:offset+9]
+	buf := bytes.NewReader(bb)
+	err := binary.Read(buf, binary.BigEndian, &constIdx)
+	if err != nil {
+		panic("failed to convert bytes to float64")
+	}
+	val := ch.Constants[constIdx]
+	return fmt.Sprintf("OP_CONSTANT_LONG\t%g", val)
 }
 
 func constantInstruction(ch chunk.Chunk, offset int) string {

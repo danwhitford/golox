@@ -15,7 +15,6 @@ func TestChunk(t *testing.T) {
 	chunk.WriteCode(OP_RETURN, 3)
 }
 
-// Don't forget the dissembler
 func TestWriteLongConstant(t *testing.T) {
 	var chunk Chunk
 
