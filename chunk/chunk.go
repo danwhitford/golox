@@ -1,6 +1,9 @@
 package chunk
 
-import "github.com/danwhitford/golox/value"
+import (
+	"github.com/danwhitford/golox/runlengthencoder"
+	"github.com/danwhitford/golox/value"
+)
 
 type OpCode byte
 
@@ -12,7 +15,7 @@ const (
 type Chunk struct {
 	Code []byte
 	Constants []value.Value
-	Lines []int
+	Lines runlengthencoder.RunLengthEncoder
 }
 
 func (ch *Chunk) WriteCode(code OpCode, line int) {
@@ -21,7 +24,7 @@ func (ch *Chunk) WriteCode(code OpCode, line int) {
 
 func (ch *Chunk) WriteChunk(b byte, line int) {
 	ch.Code = append(ch.Code, b)
-	ch.Lines = append(ch.Lines, line)
+	ch.Lines.Append(line)
 }
 
 func (ch *Chunk) AddConstant(value value.Value) byte {

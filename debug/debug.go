@@ -35,9 +35,9 @@ func constantInstruction(ch chunk.Chunk, offset int) string {
 }
 
 func offsetString(ch chunk.Chunk, offset int) string {
-	if offset > 0 && ch.Lines[offset] == ch.Lines[offset-1] {
+	if offset > 0 && ch.Lines.Get(offset) == ch.Lines.Get(offset-1) {
 		return "|"
 	} else {
-		return fmt.Sprintf("%d", ch.Lines[offset])
+		return fmt.Sprintf("%d", ch.Lines.Get(offset))
 	}
 }
