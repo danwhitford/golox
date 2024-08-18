@@ -35,3 +35,7 @@ func (rle *RunLengthEncoder) Get(idx int) int {
 	}
 	panic("not found or index out-of-range")
 }
+
+func (rle *RunLengthEncoder) Size() int {
+	return len(rle.arr)
+}
