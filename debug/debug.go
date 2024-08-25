@@ -13,7 +13,7 @@ func DissembleChunk(ch chunk.Chunk) []string {
 
 	offset := 0
 	for offset < len(ch.Code) {
-		line, shift := dissembleInstruction(ch, offset)
+		line, shift := DissembleInstruction(ch, offset)
 		line = fmt.Sprintf("%04d %s %s", offset, offsetString(ch, offset), line)
 		dissembled = append(dissembled, line)
 		offset += shift
@@ -21,7 +21,7 @@ func DissembleChunk(ch chunk.Chunk) []string {
 	return dissembled
 }
 
-func dissembleInstruction(ch chunk.Chunk, offset int) (string, int) {
+func DissembleInstruction(ch chunk.Chunk, offset int) (string, int) {
 	code := ch.Code[offset]
 	switch chunk.OpCode(code) {
 	case chunk.OP_RETURN:
@@ -30,13 +30,17 @@ func dissembleInstruction(ch chunk.Chunk, offset int) (string, int) {
 		return constantInstruction(ch, offset), 2
 	case chunk.OP_CONSTANT_LONG:
 		return constantLongInstruction(ch, offset), 9
+	case chunk.OP_NEGATE:
+		return "OP_NEGATE", 1
+	case chunk.OP_ADD:
+		return "OP_ADD", 1
 	}
 	panic(fmt.Sprintf("instruction not recognised: '%v'", ch.Code[offset]))
 }
 
 func constantLongInstruction(ch chunk.Chunk, offset int) string {
 	var constIdx uint64
-	bb := ch.Code[offset+1:offset+9]
+	bb := ch.Code[offset+1 : offset+9]
 	buf := bytes.NewReader(bb)
 	err := binary.Read(buf, binary.BigEndian, &constIdx)
 	if err != nil {

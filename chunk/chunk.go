@@ -15,6 +15,11 @@ const (
 	OP_RETURN OpCode = iota
 	OP_CONSTANT
 	OP_CONSTANT_LONG
+	OP_NEGATE
+	OP_ADD
+	OP_SUB
+	OP_MULT
+	OP_DIV
 )
 
 type Chunk struct {
@@ -45,7 +50,7 @@ func (ch *Chunk) WriteConstant(value value.Value, line int) {
 		ch.WriteChunk(byte(constantIndex), line)
 	} else {
 		ch.WriteCode(OP_CONSTANT_LONG, line)
-		buf := new(bytes.Buffer)		
+		buf := new(bytes.Buffer)
 		err := binary.Write(buf, binary.BigEndian, constantIndex)
 		if err != nil {
 			panic(fmt.Sprintf("failed to write constant, '%v'", value))

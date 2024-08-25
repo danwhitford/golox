@@ -1,0 +1,17 @@
+package vm
+
+{{ range . }}
+func (vm *Vm) {{ .OpName }}() error {
+    v2, err := vm.Stack.Pop()
+    if err != nil {
+        return err
+    }
+    v1, err := vm.Stack.Pop()
+    if err != nil {
+        return err
+    }
+    vm.Stack.Push(v1 {{ .Op }} v2)
+
+    return nil
+}
+{{ end }}

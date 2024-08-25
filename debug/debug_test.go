@@ -71,7 +71,7 @@ func TestLongConstants(t *testing.T) {
 	var ch chunk.Chunk
 
 	for i := 0; i < 300; i++ {
-		ch.WriteConstant(value.Value(i) * 7, 1)
+		ch.WriteConstant(value.Value(i)*7, 1)
 	}
 
 	var want []string
