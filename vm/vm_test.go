@@ -2,6 +2,7 @@ package vm
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 
 	"github.com/danwhitford/golox/chunk"
@@ -10,11 +11,8 @@ import (
 )
 
 func TestReturnOk(t *testing.T) {
-	var ch chunk.Chunk
-	ch.WriteCode(chunk.OP_RETURN, 1)
-
 	var vm Vm
-	got := vm.Interpret(ch)
+	got := vm.Interpret("")
 
 	want := INTERPRET_OK
 
@@ -24,14 +22,10 @@ func TestReturnOk(t *testing.T) {
 }
 
 func TestConstantOk(t *testing.T) {
-	var ch chunk.Chunk
-	ch.WriteConstant(72.0, 1)
-	ch.WriteCode(chunk.OP_RETURN, 2)
-
 	var buff bytes.Buffer
 	var vm Vm
 	vm.Out = &buff
-	stat := vm.Interpret(ch)
+	stat := vm.Interpret("72.0")
 
 	if stat != INTERPRET_OK {
 		t.Errorf("not ok '%v'", stat)
@@ -46,15 +40,11 @@ func TestConstantOk(t *testing.T) {
 }
 
 func TestDebugOk(t *testing.T) {
-	var ch chunk.Chunk
-	ch.WriteConstant(72.0, 1)
-	ch.WriteCode(chunk.OP_RETURN, 2)
-
 	var buff bytes.Buffer
 	var vm Vm
 	vm.DebugMode = true
 	vm.Out = &buff
-	stat := vm.Interpret(ch)
+	stat := vm.Interpret("72.0")
 
 	if stat != INTERPRET_OK {
 		t.Errorf("not ok '%v'", stat)
@@ -77,15 +67,10 @@ OP_RETURN
 }
 
 func TestNegateOk(t *testing.T) {
-	var ch chunk.Chunk
-	ch.WriteConstant(24.5, 1)
-	ch.WriteCode(chunk.OP_NEGATE, 1)
-	ch.WriteCode(chunk.OP_RETURN, 2)
-
 	var buff bytes.Buffer
 	var vm Vm
 	vm.Out = &buff
-	stat := vm.Interpret(ch)
+	stat := vm.Interpret("-24.5")
 
 	if stat != INTERPRET_OK {
 		t.Errorf("not ok '%v'", stat)
@@ -122,16 +107,10 @@ func TestBinaryOpsOl(t *testing.T) {
 	}
 
 	for _, tst := range table {
-		var ch chunk.Chunk
-		ch.WriteConstant(tst.v1, 1)
-		ch.WriteConstant(tst.v2, 1)
-		ch.WriteCode(tst.op, 1)
-		ch.WriteCode(chunk.OP_RETURN, 2)
-
 		var buff bytes.Buffer
 		var vm Vm
 		vm.Out = &buff
-		stat := vm.Interpret(ch)
+		stat := vm.Interpret(fmt.Sprintf("%v %v %v", tst.v1, tst.op, tst.v2))
 
 		if stat != INTERPRET_OK {
 			t.Errorf("not ok '%v'", stat)

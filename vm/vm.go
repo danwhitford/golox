@@ -5,8 +5,10 @@ package vm
 import (
 	"fmt"
 	"io"
+	"os"
 
 	"github.com/danwhitford/golox/chunk"
+	"github.com/danwhitford/golox/compiler"
 	"github.com/danwhitford/golox/debug"
 	"github.com/danwhitford/golox/stack"
 	"github.com/danwhitford/golox/value"
@@ -28,10 +30,15 @@ type Vm struct {
 	Stack     stack.Stack[value.Value]
 }
 
-func (vm *Vm) Interpret(ch chunk.Chunk) InterpretResult {
-	vm.Chunk = ch
-	vm.Ip = 0
-	return vm.Run()
+func InitVm() *Vm {
+	var vm Vm
+	vm.Out = os.Stdout
+	return &vm
+}
+
+func (vm *Vm) Interpret(source string) InterpretResult {
+	compiler.Compile(source)
+	return INTERPRET_OK
 }
 
 func (vm *Vm) Run() InterpretResult {
