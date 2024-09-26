@@ -19,8 +19,9 @@ func repl(vm *vm.Vm) {
 			continue
 		}
 
-		// vm.Interpret(line)
-		fmt.Fprintf(vm.Out, "[ GOT '%s' ]\n", line)
+		// fmt.Fprintf(vm.Out, "[ GOT '%s' ]\n", line)
+		res := vm.Interpret(line)
+		fmt.Println(res)
 		fmt.Print(">>> ")
 	}
 }

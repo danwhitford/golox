@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"io"
 	"strings"
+	"unicode"
 )
 
 type TokenType byte
@@ -73,6 +74,7 @@ type Token struct {
 }
 
 func (scnr *Scanner) ScanToken() Token {
+	scnr.skipWhitespace()
 	r, _, err := scnr.advance()
 	if err != nil {
 		if err == io.EOF {
@@ -88,32 +90,161 @@ func (scnr *Scanner) ScanToken() Token {
 			scnr.Line,
 		}
 	}
-
-	switch r {
-		case '(': return scnr.makeToken(TOKEN_LEFT_PAREN, r);
-		case ')': return scnr.makeToken(TOKEN_RIGHT_PAREN, r);
-		case '{': return scnr.makeToken(TOKEN_LEFT_BRACE, r);
-		case '}': return scnr.makeToken(TOKEN_RIGHT_BRACE, r);
-		case ';': return scnr.makeToken(TOKEN_SEMICOLON, r);
-		case ',': return scnr.makeToken(TOKEN_COMMA, r);
-		case '.': return scnr.makeToken(TOKEN_DOT, r);
-		case '-': return scnr.makeToken(TOKEN_MINUS, r);
-		case '+': return scnr.makeToken(TOKEN_PLUS, r);
-		case '/': return scnr.makeToken(TOKEN_SLASH, r);
-		case '*': return scnr.makeToken(TOKEN_STAR, r);
+	
+	if unicode.IsDigit(r) {
+		err := scnr.Source.UnreadRune()
+		if err != nil {
+			panic(err)
+		}
+		return scnr.number()
 	}
 
-	panic("end of tokens dunno what to do")
+	switch r {
+	case '(':
+		return scnr.makeToken(TOKEN_LEFT_PAREN, string(r))
+	case ')':
+		return scnr.makeToken(TOKEN_RIGHT_PAREN, string(r))
+	case '{':
+		return scnr.makeToken(TOKEN_LEFT_BRACE, string(r))
+	case '}':
+		return scnr.makeToken(TOKEN_RIGHT_BRACE, string(r))
+	case ';':
+		return scnr.makeToken(TOKEN_SEMICOLON, string(r))
+	case ',':
+		return scnr.makeToken(TOKEN_COMMA, string(r))
+	case '.':
+		return scnr.makeToken(TOKEN_DOT, string(r))
+	case '-':
+		return scnr.makeToken(TOKEN_MINUS, string(r))
+	case '+':
+		return scnr.makeToken(TOKEN_PLUS, string(r))
+	case '/':
+		return scnr.makeToken(TOKEN_SLASH, string(r))
+	case '*':
+		return scnr.makeToken(TOKEN_STAR, string(r))
+	case '!':
+		if scnr.match('=') {
+			return scnr.makeToken(TOKEN_BANG_EQUAL, "!=")
+		} else {
+			return scnr.makeToken(TOKEN_BANG, "!")
+		}
+	case '=':
+		if scnr.match('=') {
+			return scnr.makeToken(TOKEN_EQUAL_EQUAL, "==")
+		} else {
+			return scnr.makeToken(TOKEN_EQUAL, "=")
+		}
+	case '<':
+		if scnr.match('=') {
+			return scnr.makeToken(TOKEN_LESS_EQUAL, "<=")
+		} else {
+			return scnr.makeToken(TOKEN_LESS, "<")
+		}
+	case '>':
+		if scnr.match('=') {
+			return scnr.makeToken(TOKEN_GREATER_EQUAL, ">=")
+		} else {
+			return scnr.makeToken(TOKEN_GREATER, ">")
+		}
+	case '"':
+		return scnr.string()
+	}
+
+	panic("end of tokens dunno what to do with '" + string(r) + "'")
+}
+
+func (scnr *Scanner) number() Token {
+	var sb strings.Builder
+	for {
+		r, _, err := scnr.Source.ReadRune()
+		if err != nil {
+			if err == io.EOF {
+				break
+			} else {
+				panic(err)
+			}
+		}
+		if r != '.' && !unicode.IsDigit(r) {
+			break
+		}
+		sb.WriteRune(r)
+	}
+
+	return scnr.makeToken(
+		TOKEN_NUMBER,
+		sb.String(),
+	)
+}
+
+func (scnr *Scanner) string() Token {
+	var sb strings.Builder
+	for {
+		r, _, err := scnr.Source.ReadRune()
+		if err != nil {
+			if err == io.EOF {
+				panic("unterminated string")
+			} else {
+				panic(err)
+			}
+		}
+		if r == '"' {
+			break
+		}
+		sb.WriteRune(r)
+	}
+
+	return scnr.makeToken(
+		TOKEN_STRING,
+		sb.String(),
+	)
+}
+
+func (scnr *Scanner) skipWhitespace() {
+	for {
+		next, _, err := scnr.Source.ReadRune()
+		if err != nil {
+			if err == io.EOF {
+				return
+			} else {
+				panic(err)
+			}
+		}
+		if !unicode.IsSpace(next) {
+			err := scnr.Source.UnreadRune()
+			if err != nil {
+				panic(err)
+			}
+			return
+		}
+	}
+}
+
+func (scnr *Scanner) match(r rune) bool {
+	next, _, err := scnr.Source.ReadRune()
+	if err != nil {
+		if err == io.EOF {
+			return false
+		} else {
+			panic(err)
+		}
+	}
+	if r != next {
+		err = scnr.Source.UnreadRune()
+		if err != nil {
+			panic(err)
+		}
+	}
+	return true
 }
 
 func (scnr *Scanner) advance() (rune, int, error) {
 	return scnr.Source.ReadRune()
 }
 
-func (scnr *Scanner) makeToken(tt TokenType, r rune) Token {
+func (scnr *Scanner) makeToken(tt TokenType, lexeme string) Token {
 	return Token{
 		tt,
-		string(r),
+		lexeme,
 		scnr.Line,
 	}
 }

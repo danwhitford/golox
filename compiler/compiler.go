@@ -18,7 +18,7 @@ func Compile(source string) {
 		} else {
 			fmt.Print("    | ")
 		}
-		fmt.Printf("%2d '%s'\n", token.Type, token.Lexeme)
+		fmt.Printf(" %v '%s'\n", token.Type, token.Lexeme)
 
 		if token.Type == scanner.TOKEN_EOF {
 			break
