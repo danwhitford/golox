@@ -53,6 +53,25 @@ const (
 	TOKEN_ERROR
 )
 
+var identifierMap map[string]TokenType = map[string]TokenType{
+	"and": TOKEN_AND,
+	"class": TOKEN_CLASS,
+	"else": TOKEN_ELSE,
+	"if": TOKEN_IF,
+	"nil": TOKEN_NIL,
+	"or": TOKEN_OR,
+	"print": TOKEN_PRINT,
+	"return": TOKEN_RETURN,
+	"super": TOKEN_SUPER,
+	"var": TOKEN_VAR,
+	"while": TOKEN_WHILE,
+	"false": TOKEN_FALSE,
+	"for": TOKEN_FOR,
+	"fun": TOKEN_FUN,
+	"this": TOKEN_THIS,
+	"true": TOKEN_TRUE,
+}
+
 type Scanner struct {
 	Source               *bufio.Reader
 	Start, Current, Line int
@@ -91,6 +110,14 @@ func (scnr *Scanner) ScanToken() Token {
 		}
 	}
 	
+	if unicode.IsLetter(r) {
+		err := scnr.Source.UnreadRune()
+		if err != nil {
+			panic(err)
+		}
+		return scnr.identifier()
+	}
+
 	if unicode.IsDigit(r) {
 		err := scnr.Source.UnreadRune()
 		if err != nil {
@@ -151,6 +178,38 @@ func (scnr *Scanner) ScanToken() Token {
 	}
 
 	panic("end of tokens dunno what to do with '" + string(r) + "'")
+}
+
+func (scnr *Scanner) identifier() Token {
+	var sb strings.Builder
+	for {
+		r, _, err := scnr.Source.ReadRune()
+		if err != nil {
+			if err == io.EOF {
+				break
+			} else {
+				panic(err)
+			}
+		}
+		if !unicode.In(r, unicode.Number, unicode.Letter) {
+			break
+		}
+		sb.WriteRune(r)
+	}
+
+	return scnr.makeToken(
+		identifierType(sb.String()),
+		sb.String(),
+	)
+}
+
+func identifierType(word string) TokenType {
+	m, prs := identifierMap[word]
+	if prs {
+		return m
+	} else {
+		return TOKEN_IDENTIFIER
+	}
 }
 
 func (scnr *Scanner) number() Token {

@@ -91,6 +91,26 @@ func TestScanToken(t *testing.T) {
 				},
 			},
 		},
+		{
+			`foo`,
+			[]Token{
+				{
+					Type:   TOKEN_IDENTIFIER,
+					Lexeme: "foo",
+					Line:   1,
+				},
+			},
+		},
+		{
+			`fun`,
+			[]Token{
+				{
+					Type:   TOKEN_FUN,
+					Lexeme: "fun",
+					Line:   1,
+				},
+			},
+		},
 	}
 
 	for _, tst := range table {
