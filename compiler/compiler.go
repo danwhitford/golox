@@ -11,7 +11,10 @@ func Compile(source string) {
 
 	line := -1
 	for {
-		token := scner.ScanToken()
+		token, err := scner.ScanToken()
+		if err != nil {
+			fmt.Printf("scan error. %v", err)
+		}
 		if token.Line != line {
 			fmt.Printf("%4d", token.Line)
 			line = token.Line

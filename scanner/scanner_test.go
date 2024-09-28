@@ -1,6 +1,7 @@
 package scanner
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -111,16 +112,46 @@ func TestScanToken(t *testing.T) {
 				},
 			},
 		},
+		{
+			`= `,
+			[]Token{
+				{
+					Type:   TOKEN_EQUAL,
+					Lexeme: "=",
+					Line:   1,
+				},
+			},
+		},
+		{
+			`<<`,
+			[]Token{
+				{
+					Type:   TOKEN_LESS,
+					Lexeme: "<",
+					Line:   1,
+				},
+				{
+					Type:   TOKEN_LESS,
+					Lexeme: "<",
+					Line:   1,
+				},
+			},
+		},
 	}
 
-	for _, tst := range table {
-		scnr := NewScanner(tst.code)
-		for i, tkn := range tst.tokens {
-			want := tkn
-			got := scnr.ScanToken()
-			if diff := cmp.Diff(want, got); diff != "" {
-				t.Errorf("%d: Mismatch (-want +got):\n%s", i, diff)
+	for i, tst := range table {
+		t.Run(fmt.Sprintf("Test %d", i), func(t *testing.T) {
+			scnr := NewScanner(tst.code)
+			for _, tkn := range tst.tokens {
+				want := tkn
+				got, err := scnr.ScanToken()
+				if err != nil {
+					t.Fatalf("%d: %v", i, err)
+				}
+				if diff := cmp.Diff(want, got); diff != "" {
+					t.Fatalf("%d: Mismatch (-want +got):\n%s", i, diff)
+				}
 			}
-		}
+		})
 	}
 }
