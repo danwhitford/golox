@@ -144,9 +144,9 @@ func TestScanToken(t *testing.T) {
 			scnr := NewScanner(tst.code)
 			for _, tkn := range tst.tokens {
 				want := tkn
-				got, err := scnr.ScanToken()
-				if err != nil {
-					t.Fatalf("%d: %v", i, err)
+				got := scnr.ScanToken()
+				if got.Type == TOKEN_ERROR {
+					t.Fatalf("%d: %v", i, got.Lexeme)
 				}
 				if diff := cmp.Diff(want, got); diff != "" {
 					t.Fatalf("%d: Mismatch (-want +got):\n%s", i, diff)

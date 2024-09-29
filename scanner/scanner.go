@@ -2,7 +2,6 @@ package scanner
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -56,22 +55,22 @@ const (
 )
 
 var identifierMap map[string]TokenType = map[string]TokenType{
-	"and": TOKEN_AND,
-	"class": TOKEN_CLASS,
-	"else": TOKEN_ELSE,
-	"if": TOKEN_IF,
-	"nil": TOKEN_NIL,
-	"or": TOKEN_OR,
-	"print": TOKEN_PRINT,
+	"and":    TOKEN_AND,
+	"class":  TOKEN_CLASS,
+	"else":   TOKEN_ELSE,
+	"if":     TOKEN_IF,
+	"nil":    TOKEN_NIL,
+	"or":     TOKEN_OR,
+	"print":  TOKEN_PRINT,
 	"return": TOKEN_RETURN,
-	"super": TOKEN_SUPER,
-	"var": TOKEN_VAR,
-	"while": TOKEN_WHILE,
-	"false": TOKEN_FALSE,
-	"for": TOKEN_FOR,
-	"fun": TOKEN_FUN,
-	"this": TOKEN_THIS,
-	"true": TOKEN_TRUE,
+	"super":  TOKEN_SUPER,
+	"var":    TOKEN_VAR,
+	"while":  TOKEN_WHILE,
+	"false":  TOKEN_FALSE,
+	"for":    TOKEN_FOR,
+	"fun":    TOKEN_FUN,
+	"this":   TOKEN_THIS,
+	"true":   TOKEN_TRUE,
 }
 
 type Scanner struct {
@@ -94,10 +93,13 @@ type Token struct {
 	Line   int
 }
 
-func (scnr *Scanner) ScanToken() (Token, error) {
+func (scnr *Scanner) ScanToken() Token {
 	err := scnr.skipWhitespace()
 	if err != nil {
-		return Token{}, err
+		return scnr.makeToken(
+			TOKEN_ERROR,
+			string(err.Error()),
+		)
 	}
 	r, _, err := scnr.advance()
 	if err != nil {
@@ -106,19 +108,19 @@ func (scnr *Scanner) ScanToken() (Token, error) {
 				TOKEN_EOF,
 				"",
 				scnr.Line,
-			}, nil
+			}
 		}
 		return Token{
 			TOKEN_ERROR,
 			string(r),
 			scnr.Line,
-		}, nil
+		}
 	}
-	
+
 	if unicode.IsLetter(r) {
 		err := scnr.Source.UnreadRune()
 		if err != nil {
-			return Token{}, err
+			return Token{}
 		}
 		return scnr.identifier()
 	}
@@ -126,79 +128,93 @@ func (scnr *Scanner) ScanToken() (Token, error) {
 	if unicode.IsDigit(r) {
 		err := scnr.Source.UnreadRune()
 		if err != nil {
-			return Token{}, err
+			return Token{}
 		}
 		return scnr.number()
 	}
 
 	switch r {
 	case '(':
-		return scnr.makeToken(TOKEN_LEFT_PAREN, string(r)), nil
+		return scnr.makeToken(TOKEN_LEFT_PAREN, string(r))
 	case ')':
-		return scnr.makeToken(TOKEN_RIGHT_PAREN, string(r)), nil
+		return scnr.makeToken(TOKEN_RIGHT_PAREN, string(r))
 	case '{':
-		return scnr.makeToken(TOKEN_LEFT_BRACE, string(r)), nil
+		return scnr.makeToken(TOKEN_LEFT_BRACE, string(r))
 	case '}':
-		return scnr.makeToken(TOKEN_RIGHT_BRACE, string(r)), nil
+		return scnr.makeToken(TOKEN_RIGHT_BRACE, string(r))
 	case ';':
-		return scnr.makeToken(TOKEN_SEMICOLON, string(r)), nil
+		return scnr.makeToken(TOKEN_SEMICOLON, string(r))
 	case ',':
-		return scnr.makeToken(TOKEN_COMMA, string(r)), nil
+		return scnr.makeToken(TOKEN_COMMA, string(r))
 	case '.':
-		return scnr.makeToken(TOKEN_DOT, string(r)), nil
+		return scnr.makeToken(TOKEN_DOT, string(r))
 	case '-':
-		return scnr.makeToken(TOKEN_MINUS, string(r)), nil
+		return scnr.makeToken(TOKEN_MINUS, string(r))
 	case '+':
-		return scnr.makeToken(TOKEN_PLUS, string(r)), nil
+		return scnr.makeToken(TOKEN_PLUS, string(r))
 	case '/':
-		return scnr.makeToken(TOKEN_SLASH, string(r)), nil
+		return scnr.makeToken(TOKEN_SLASH, string(r))
 	case '*':
-		return scnr.makeToken(TOKEN_STAR, string(r)), nil
+		return scnr.makeToken(TOKEN_STAR, string(r))
 	case '!':
 		if b, err := scnr.match('='); b {
-			return scnr.makeToken(TOKEN_BANG_EQUAL, "!="), nil
+			return scnr.makeToken(TOKEN_BANG_EQUAL, "!=")
 		} else {
 			if err != nil {
-				return Token{}, err
+				return scnr.makeToken(
+					TOKEN_ERROR,
+					string(err.Error()),
+				)
 			}
-			return scnr.makeToken(TOKEN_BANG, "!"), nil
+			return scnr.makeToken(TOKEN_BANG, "!")
 		}
 	case '=':
 		if b, err := scnr.match('='); b {
-			return scnr.makeToken(TOKEN_EQUAL_EQUAL, "=="), nil
+			return scnr.makeToken(TOKEN_EQUAL_EQUAL, "==")
 		} else {
 			if err != nil {
-				return Token{}, err
+				return scnr.makeToken(
+					TOKEN_ERROR,
+					string(err.Error()),
+				)
 			}
-			return scnr.makeToken(TOKEN_EQUAL, "="), nil
+			return scnr.makeToken(TOKEN_EQUAL, "=")
 		}
 	case '<':
 		if b, err := scnr.match('='); b {
-			return scnr.makeToken(TOKEN_LESS_EQUAL, "<="), nil
+			return scnr.makeToken(TOKEN_LESS_EQUAL, "<=")
 		} else {
 			if err != nil {
-				return Token{}, err
+				return scnr.makeToken(
+					TOKEN_ERROR,
+					string(err.Error()),
+				)
 			}
-			return scnr.makeToken(TOKEN_LESS, "<"), nil
+			return scnr.makeToken(TOKEN_LESS, "<")
 		}
 	case '>':
 		if b, err := scnr.match('='); b {
-			return scnr.makeToken(TOKEN_GREATER_EQUAL, ">="), nil
+			return scnr.makeToken(TOKEN_GREATER_EQUAL, ">=")
 		} else {
 			if err != nil {
-				return Token{}, err
+				return scnr.makeToken(
+					TOKEN_ERROR,
+					string(err.Error()),
+				)
 			}
-			return scnr.makeToken(TOKEN_GREATER, ">"), nil
+			return scnr.makeToken(TOKEN_GREATER, ">")
 		}
 	case '"':
 		return scnr.string()
 	}
 
-	return Token{},
-		fmt.Errorf("end of tokens dunno what to do with '%v'", r)
+	return scnr.makeToken(
+		TOKEN_ERROR,
+		fmt.Sprintf("do not understand token '%c'", r),
+	)
 }
 
-func (scnr *Scanner) identifier() (Token, error) {
+func (scnr *Scanner) identifier() Token {
 	var sb strings.Builder
 	for {
 		r, _, err := scnr.Source.ReadRune()
@@ -206,7 +222,7 @@ func (scnr *Scanner) identifier() (Token, error) {
 			if err == io.EOF {
 				break
 			} else {
-				return Token{}, err
+				return Token{}
 			}
 		}
 		if !unicode.In(r, unicode.Number, unicode.Letter) {
@@ -218,7 +234,7 @@ func (scnr *Scanner) identifier() (Token, error) {
 	return scnr.makeToken(
 		identifierType(sb.String()),
 		sb.String(),
-	), nil
+	)
 }
 
 func identifierType(word string) TokenType {
@@ -230,7 +246,7 @@ func identifierType(word string) TokenType {
 	}
 }
 
-func (scnr *Scanner) number() (Token, error) {
+func (scnr *Scanner) number() Token {
 	var sb strings.Builder
 	for {
 		r, _, err := scnr.Source.ReadRune()
@@ -238,7 +254,10 @@ func (scnr *Scanner) number() (Token, error) {
 			if err == io.EOF {
 				break
 			} else {
-				return Token{}, err
+				return scnr.makeToken(
+					TOKEN_ERROR,
+					string(err.Error()),
+				)
 			}
 		}
 		if r != '.' && !unicode.IsDigit(r) {
@@ -250,18 +269,21 @@ func (scnr *Scanner) number() (Token, error) {
 	return scnr.makeToken(
 		TOKEN_NUMBER,
 		sb.String(),
-	), nil
+	)
 }
 
-func (scnr *Scanner) string() (Token, error) {
+func (scnr *Scanner) string() Token {
 	var sb strings.Builder
 	for {
 		r, _, err := scnr.Source.ReadRune()
 		if err != nil {
 			if err == io.EOF {
-				return Token{}, errors.New("unterminated string")
+				return scnr.makeToken(
+					TOKEN_ERROR,
+					"unterminated string",
+				)
 			} else {
-				return Token{}, err
+				return Token{}
 			}
 		}
 		if r == '"' {
@@ -273,7 +295,7 @@ func (scnr *Scanner) string() (Token, error) {
 	return scnr.makeToken(
 		TOKEN_STRING,
 		sb.String(),
-	), nil
+	)
 }
 
 func (scnr *Scanner) skipWhitespace() error {
