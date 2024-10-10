@@ -30,7 +30,6 @@ func main() {
 	fmt.Println("ARGS", os.Args)
 
 	vm := vm.InitVm()
+	vm.DebugMode = true
 	repl(vm)
-
-	vm.Run()
 }

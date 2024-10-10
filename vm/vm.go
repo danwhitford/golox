@@ -14,6 +14,7 @@ import (
 	"github.com/danwhitford/golox/value"
 )
 
+//go:generate stringer -type=InterpretResult
 type InterpretResult byte
 
 const (
@@ -39,6 +40,7 @@ func InitVm() *Vm {
 func (vm *Vm) Interpret(source string) InterpretResult {
 	cmp := compiler.Init(source)
 	vm.Chunk = cmp.Compile(source)
+	vm.Ip = 0
 	res := vm.Run()
 	return res
 }
