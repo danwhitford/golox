@@ -9,6 +9,7 @@ import (
 	"github.com/danwhitford/golox/value"
 )
 
+//go:generate stringer -type=OpCode
 type OpCode byte
 
 const (

@@ -37,8 +37,10 @@ func InitVm() *Vm {
 }
 
 func (vm *Vm) Interpret(source string) InterpretResult {
-	compiler.Compile(source)
-	return INTERPRET_OK
+	cmp := compiler.Init(source)
+	vm.Chunk = cmp.Compile(source)
+	res := vm.Run()
+	return res
 }
 
 func (vm *Vm) Run() InterpretResult {
