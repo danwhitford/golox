@@ -47,5 +47,17 @@ func (compiler *Compiler) expression() {
 			}
 			compiler.CurrentChunk.WriteConstant(value.Value(f), compiler.token.Line)
 		}
+	case scanner.TOKEN_MINUS:
+		{
+			compiler.token = compiler.Scnr.ScanToken()
+			compiler.expression()
+			compiler.CurrentChunk.WriteCode(chunk.OP_NEGATE, compiler.token.Line)
+		}
+	case scanner.TOKEN_PLUS:
+		{
+			compiler.token = compiler.Scnr.ScanToken()
+			compiler.expression()
+			compiler.CurrentChunk.WriteCode(chunk.OP_ADD, compiler.token.Line)
+		}
 	}
 }

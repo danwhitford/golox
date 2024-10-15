@@ -32,6 +32,35 @@ func TestCompile(t *testing.T) {
 				Constants: []value.Value{4},
 			},
 		},
+		{
+			"-42",
+			chunk.Chunk{
+				Code: []byte{
+					byte(chunk.OP_CONSTANT),					
+					byte(0),
+					byte(chunk.OP_NEGATE),
+					byte(chunk.OP_RETURN),
+				},
+				Constants: []value.Value{42},
+			},
+		},
+		{
+			"1 + 2",
+			chunk.Chunk{
+				Code: []byte{
+					byte(chunk.OP_CONSTANT),					
+					byte(0),
+					byte(chunk.OP_CONSTANT),					
+					byte(1),
+					byte(chunk.OP_ADD),
+					byte(chunk.OP_RETURN),
+				},
+				Constants: []value.Value{
+					1,
+					2,
+				},
+			},
+		},
 	}
 
 	opts := cmpopts.IgnoreFields(chunk.Chunk{}, "Lines")
