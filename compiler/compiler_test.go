@@ -61,14 +61,67 @@ func TestCompile(t *testing.T) {
 				},
 			},
 		},
+		{
+			"3 - 4",
+			chunk.Chunk{
+				Code: []byte{
+					byte(chunk.OP_CONSTANT),					
+					byte(0),
+					byte(chunk.OP_CONSTANT),					
+					byte(1),
+					byte(chunk.OP_SUB),
+					byte(chunk.OP_RETURN),
+				},
+				Constants: []value.Value{
+					3,
+					4,
+				},
+			},
+		},
+		{
+			"10 * 5",
+			chunk.Chunk{
+				Code: []byte{
+					byte(chunk.OP_CONSTANT),					
+					byte(0),
+					byte(chunk.OP_CONSTANT),					
+					byte(1),
+					byte(chunk.OP_MULT),
+					byte(chunk.OP_RETURN),
+				},
+				Constants: []value.Value{
+					10,
+					5,
+				},
+			},
+		},
+		{
+			"100 / 3",
+			chunk.Chunk{
+				Code: []byte{
+					byte(chunk.OP_CONSTANT),					
+					byte(0),
+					byte(chunk.OP_CONSTANT),					
+					byte(1),
+					byte(chunk.OP_DIV),
+					byte(chunk.OP_RETURN),
+				},
+				Constants: []value.Value{
+					100,
+					3,
+				},
+			},
+		},
 	}
 
 	opts := cmpopts.IgnoreFields(chunk.Chunk{}, "Lines")
 	for i, tst := range table {
+		t.Logf("running %d (%s)", i, tst.source)
 		cmplr := Init(tst.source)
 		got := cmplr.Compile(tst.source)
 		if diff := cmp.Diff(tst.want, got, opts); diff != "" {
 			t.Errorf("%d: Mismatch (-want +got):\n%s", i, diff)
 		}
+		t.Logf("passed %d", i)
 	}
 }

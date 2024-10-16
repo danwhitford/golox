@@ -34,8 +34,9 @@ func DissembleInstruction(ch chunk.Chunk, offset int) (string, int) {
 		return "OP_NEGATE", 1
 	case chunk.OP_ADD:
 		return "OP_ADD", 1
+	default:
+		return chunk.OpCode(code).String(), 1
 	}
-	panic(fmt.Sprintf("instruction not recognised: '%v'", ch.Code[offset]))
 }
 
 func constantLongInstruction(ch chunk.Chunk, offset int) string {
