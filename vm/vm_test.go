@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/danwhitford/golox/chunk"
 	"github.com/danwhitford/golox/value"
 	"github.com/google/go-cmp/cmp"
 )
@@ -89,20 +88,20 @@ func TestBinaryOpsOl(t *testing.T) {
 	table := []struct {
 		v1   value.Value
 		v2   value.Value
-		op   chunk.OpCode
+		op   string
 		want string
 	}{
 		{
-			2, 7, chunk.OP_ADD, "9",
+			2, 7, "+", "9",
 		},
 		{
-			2, 7, chunk.OP_SUB, "-5",
+			2, 7, "-", "-5",
 		},
 		{
-			2, 7, chunk.OP_MULT, "14",
+			2, 7, "*", "14",
 		},
 		{
-			14, 7, chunk.OP_DIV, "2",
+			14, 7, "/", "2",
 		},
 	}
 
