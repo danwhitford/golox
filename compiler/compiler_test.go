@@ -112,6 +112,48 @@ func TestCompile(t *testing.T) {
 				},
 			},
 		},
+		{
+			"(1 + 2) - 3",
+			chunk.Chunk{
+				Code: []byte{
+					byte(chunk.OP_CONSTANT),					
+					byte(0),
+					byte(chunk.OP_CONSTANT),					
+					byte(1),
+					byte(chunk.OP_ADD),
+					byte(chunk.OP_CONSTANT),					
+					byte(2),
+					byte(chunk.OP_SUB),
+					byte(chunk.OP_RETURN),
+				},
+				Constants: []value.Value{
+					1,
+					2,
+					3,
+				},
+			},
+		},
+		{
+			"1 + (2 - 3)",
+			chunk.Chunk{
+				Code: []byte{
+					byte(chunk.OP_CONSTANT),					
+					byte(0),
+					byte(chunk.OP_CONSTANT),					
+					byte(1),
+					byte(chunk.OP_CONSTANT),					
+					byte(2),
+					byte(chunk.OP_SUB),
+					byte(chunk.OP_ADD),
+					byte(chunk.OP_RETURN),
+				},
+				Constants: []value.Value{
+					1,
+					2,
+					3,
+				},
+			},
+		},
 	}
 
 	opts := cmpopts.IgnoreFields(chunk.Chunk{}, "Lines")
@@ -120,7 +162,7 @@ func TestCompile(t *testing.T) {
 		cmplr := Init(tst.source)
 		got := cmplr.Compile(tst.source)
 		if diff := cmp.Diff(tst.want, got, opts); diff != "" {
-			t.Errorf("%d: Mismatch (-want +got):\n%s", i, diff)
+			t.Fatalf("%d: Mismatch (-want +got):\n%s", i, diff)
 		}
 		t.Logf("passed %d", i)
 	}

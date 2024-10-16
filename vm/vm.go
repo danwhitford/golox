@@ -48,11 +48,11 @@ func (vm *Vm) Interpret(source string) InterpretResult {
 func (vm *Vm) Run() InterpretResult {
 	for {
 		if vm.DebugMode {
-			fmt.Fprintln(vm.Out, " === ")
+			fmt.Fprintln(vm.Out, "\t === ")
 			for _, v := range vm.Stack {
-				fmt.Fprintf(vm.Out, " [ %v ] \n", v)
+				fmt.Fprintf(vm.Out, "\t [ %v ] \n", v)
 			}
-			fmt.Fprintln(vm.Out, " === ")
+			fmt.Fprintln(vm.Out, "\t === ")
 			line, _ := debug.DissembleInstruction(vm.Chunk, vm.Ip)
 			fmt.Fprintln(vm.Out, line)
 		}

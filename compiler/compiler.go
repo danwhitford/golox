@@ -32,22 +32,24 @@ func (compiler *Compiler) getRule(t scanner.TokenType) parseRule {
 		return parseRule{compiler.unary, compiler.binary}
 	case scanner.TOKEN_NUMBER:
 		return parseRule{compiler.number, nil}
-	case scanner.TOKEN_PLUS, scanner.TOKEN_STAR, scanner.TOKEN_SLASH:		
+	case scanner.TOKEN_PLUS, scanner.TOKEN_STAR, scanner.TOKEN_SLASH:
 		return parseRule{nil, compiler.binary}
+	case scanner.TOKEN_LEFT_PAREN:
+		return parseRule{compiler.grouping, nil}
 	}
 	panic("don't know rule for " + t.String())
 }
 
 func (compiler *Compiler) unary() {
 	compiler.token = compiler.Scnr.ScanToken()
-	compiler.expression()
+	compiler.parseWithPrecedence()
 	compiler.CurrentChunk.WriteCode(chunk.OP_NEGATE, compiler.token.Line)
 }
 
 func (compiler *Compiler) binary() {
 	infixer := compiler.token
 	compiler.token = compiler.Scnr.ScanToken()
-	compiler.expression()
+	compiler.parseWithPrecedence()
 	switch infixer.Type {
 	case scanner.TOKEN_PLUS:
 		compiler.CurrentChunk.WriteCode(chunk.OP_ADD, compiler.token.Line)
@@ -57,7 +59,8 @@ func (compiler *Compiler) binary() {
 		compiler.CurrentChunk.WriteCode(chunk.OP_MULT, compiler.token.Line)
 	case scanner.TOKEN_SLASH:
 		compiler.CurrentChunk.WriteCode(chunk.OP_DIV, compiler.token.Line)
-	default: panic("don't know infix for '" + infixer.Lexeme + "'")
+	default:
+		panic("don't know infix for '" + infixer.Lexeme + "'")
 	}
 }
 
@@ -69,7 +72,16 @@ func (compiler *Compiler) number() {
 	compiler.CurrentChunk.WriteConstant(value.Value(f), compiler.token.Line)
 }
 
+func (compiler *Compiler) grouping() {
+	compiler.token = compiler.Scnr.ScanToken()
+	compiler.expression()
+}
+
 func (compiler *Compiler) expression() {
+	compiler.parseWithPrecedence()
+}
+
+func (compiler *Compiler) parseWithPrecedence() {
 	rule := compiler.getRule(compiler.token.Type)
 	rule.prefix()
 
@@ -78,13 +90,15 @@ func (compiler *Compiler) expression() {
 		if compiler.token.Type == scanner.TOKEN_EOF {
 			return
 		}
+		if compiler.token.Type == scanner.TOKEN_RIGHT_PAREN {
+			return
+		}
 		rule := compiler.getRule(compiler.token.Type)
 		rule.infix()
 	}
 }
 
 func (compiler *Compiler) Compile(source string) chunk.Chunk {
-
 	for {
 		compiler.token = compiler.Scnr.ScanToken()
 
@@ -93,7 +107,7 @@ func (compiler *Compiler) Compile(source string) chunk.Chunk {
 			break
 		}
 
-		compiler.expression()
+		compiler.parseWithPrecedence()
 	}
 
 	return compiler.CurrentChunk

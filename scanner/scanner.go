@@ -93,7 +93,7 @@ type Token struct {
 	Line   int
 }
 
-func (scnr *Scanner) ScanToken() Token {
+func (scnr *Scanner) ScanToken() Token {	
 	err := scnr.skipWhitespace()
 	if err != nil {
 		return scnr.makeToken(
@@ -261,6 +261,10 @@ func (scnr *Scanner) number() Token {
 			}
 		}
 		if r != '.' && !unicode.IsDigit(r) {
+			err := scnr.Source.UnreadRune()
+			if err != nil {
+				panic(err)
+			}
 			break
 		}
 		sb.WriteRune(r)

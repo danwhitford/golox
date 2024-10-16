@@ -137,6 +137,96 @@ func TestScanToken(t *testing.T) {
 				},
 			},
 		},
+		{
+			`1+2`,
+			[]Token{
+				{
+					Type:   TOKEN_NUMBER,
+					Lexeme: "1",
+					Line:   1,
+				},
+				{
+					Type:   TOKEN_PLUS,
+					Lexeme: "+",
+					Line:   1,
+				},
+				{
+					Type:   TOKEN_NUMBER,
+					Lexeme: "2",
+					Line:   1,
+				},
+			},
+		},
+		{
+			`(1+2)`,
+			[]Token{
+				{
+					Type:   TOKEN_LEFT_PAREN,
+					Lexeme: "(",
+					Line:   1,
+				},
+				{
+					Type:   TOKEN_NUMBER,
+					Lexeme: "1",
+					Line:   1,
+				},
+				{
+					Type:   TOKEN_PLUS,
+					Lexeme: "+",
+					Line:   1,
+				},
+				{
+					Type:   TOKEN_NUMBER,
+					Lexeme: "2",
+					Line:   1,
+				},
+				{
+					Type:   TOKEN_RIGHT_PAREN,
+					Lexeme: ")",
+					Line:   1,
+				},
+			},
+		},
+		{
+			`(1 + 2) - 3`,
+			[]Token{
+				{
+					Type:   TOKEN_LEFT_PAREN,
+					Lexeme: "(",
+					Line:   1,
+				},
+				{
+					Type:   TOKEN_NUMBER,
+					Lexeme: "1",
+					Line:   1,
+				},
+				{
+					Type:   TOKEN_PLUS,
+					Lexeme: "+",
+					Line:   1,
+				},
+				{
+					Type:   TOKEN_NUMBER,
+					Lexeme: "2",
+					Line:   1,
+				},
+				{
+					Type:   TOKEN_RIGHT_PAREN,
+					Lexeme: ")",
+					Line:   1,
+				},
+				{
+					Type:   TOKEN_MINUS,
+					Lexeme: "-",
+					Line:   1,
+				},
+				{
+					Type:   TOKEN_NUMBER,
+					Lexeme: "3",
+					Line:   1,
+				},
+			},
+		},
 	}
 
 	for i, tst := range table {
