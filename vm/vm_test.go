@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/danwhitford/golox/value"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -86,8 +85,8 @@ func TestNegateOk(t *testing.T) {
 
 func TestBinaryOpsOl(t *testing.T) {
 	table := []struct {
-		v1   value.Value
-		v2   value.Value
+		v1   float64
+		v2   float64
 		op   string
 		want string
 	}{

@@ -50,7 +50,7 @@ func (vm *Vm) Run() InterpretResult {
 		if vm.DebugMode {
 			fmt.Fprintln(vm.Out, " === ")
 			for _, v := range vm.Stack {
-				fmt.Fprintf(vm.Out, " [ %v ] \n", v)
+				fmt.Fprintf(vm.Out, " [ %v ] \n", v.As)
 			}
 			fmt.Fprintln(vm.Out, " === ")
 			line, _ := debug.DissembleInstruction(vm.Chunk, vm.Ip)
@@ -97,7 +97,8 @@ func (vm *Vm) Run() InterpretResult {
 				if err != nil {
 					return INTERPRET_RUNTIME_ERROR
 				}
-				vm.Stack.Push(-v)
+				v.As = -(v.AsNumber())
+				vm.Stack.Push(v)
 			}
 		case chunk.OP_RETURN:
 			if !vm.Stack.Empty() {
@@ -105,7 +106,7 @@ func (vm *Vm) Run() InterpretResult {
 				if err != nil {
 					return INTERPRET_RUNTIME_ERROR
 				}
-				fmt.Fprintln(vm.Out, v)
+				fmt.Fprintln(vm.Out, v.As)
 			}
 			return INTERPRET_OK
 		}

@@ -24,7 +24,7 @@ func TestDissembleBasicChunk(t *testing.T) {
 func TestDissembleConstantChunk(t *testing.T) {
 	var ch chunk.Chunk
 
-	constant := ch.AddConstant(72.2)
+	constant := ch.AddConstant(value.NumberVal(72.2))
 	if constant != 0 {
 		t.Fatalf("wanted '0', got '%v'", constant)
 	}
@@ -47,7 +47,7 @@ func TestDissembleConstantChunk(t *testing.T) {
 func TestLineNumbers(t *testing.T) {
 	var ch chunk.Chunk
 
-	constant := ch.AddConstant(72.2)
+	constant := ch.AddConstant(value.NumberVal(72.2))
 	if constant != 0 {
 		t.Fatalf("wanted '0', got '%v'", constant)
 	}
@@ -71,7 +71,7 @@ func TestLongConstants(t *testing.T) {
 	var ch chunk.Chunk
 
 	for i := 0; i < 300; i++ {
-		ch.WriteConstant(value.Value(i)*7, 1)
+		ch.WriteConstant(value.NumberVal(float64(i*7)), 1)
 	}
 
 	var want []string

@@ -93,7 +93,7 @@ type Token struct {
 	Line   int
 }
 
-func (scnr *Scanner) ScanToken() Token {	
+func (scnr *Scanner) ScanToken() Token {
 	err := scnr.skipWhitespace()
 	if err != nil {
 		return scnr.makeToken(

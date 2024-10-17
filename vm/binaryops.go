@@ -1,4 +1,5 @@
 package vm
+import "github.com/danwhitford/golox/value"
 
 
 func (vm *Vm) Add() error {
@@ -10,7 +11,9 @@ func (vm *Vm) Add() error {
     if err != nil {
         return err
     }
-    vm.Stack.Push(v1 + v2)
+    vm.Stack.Push(
+        value.NumberVal(v1.AsNumber() + v2.AsNumber()),
+    )
 
     return nil
 }
@@ -24,7 +27,9 @@ func (vm *Vm) Sub() error {
     if err != nil {
         return err
     }
-    vm.Stack.Push(v1 - v2)
+    vm.Stack.Push(
+        value.NumberVal(v1.AsNumber() - v2.AsNumber()),
+    )
 
     return nil
 }
@@ -38,7 +43,9 @@ func (vm *Vm) Mult() error {
     if err != nil {
         return err
     }
-    vm.Stack.Push(v1 * v2)
+    vm.Stack.Push(
+        value.NumberVal(v1.AsNumber() * v2.AsNumber()),
+    )
 
     return nil
 }
@@ -52,7 +59,9 @@ func (vm *Vm) Div() error {
     if err != nil {
         return err
     }
-    vm.Stack.Push(v1 / v2)
+    vm.Stack.Push(
+        value.NumberVal(v1.AsNumber() / v2.AsNumber()),
+    )
 
     return nil
 }

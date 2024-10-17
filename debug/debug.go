@@ -48,13 +48,13 @@ func constantLongInstruction(ch chunk.Chunk, offset int) string {
 		panic("failed to convert bytes to float64")
 	}
 	val := ch.Constants[constIdx]
-	return fmt.Sprintf("OP_CONSTANT_LONG\t%g", val)
+	return fmt.Sprintf("OP_CONSTANT_LONG\t%v", val.As)
 }
 
 func constantInstruction(ch chunk.Chunk, offset int) string {
 	chunkLoc := ch.Code[offset+1]
 	cst := ch.Constants[chunkLoc]
-	return fmt.Sprintf("OP_CONSTANT\t%g", cst)
+	return fmt.Sprintf("OP_CONSTANT\t%v", cst.As)
 }
 
 func offsetString(ch chunk.Chunk, offset int) string {

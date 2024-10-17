@@ -97,7 +97,7 @@ func (compiler *Compiler) number() {
 	if err != nil {
 		panic(fmt.Sprintf("float parse error. %v", err))
 	}
-	compiler.CurrentChunk.WriteConstant(value.Value(f), compiler.currentToken.Line)
+	compiler.CurrentChunk.WriteConstant(value.NumberVal(f), compiler.currentToken.Line)
 }
 
 func (compiler *Compiler) grouping() {
@@ -124,12 +124,6 @@ func (compiler *Compiler) parseWithPrecedence(prec precedence) {
 
 	for prec <= compiler.getRule(compiler.currentToken.Type).precedence {
 		compiler.advance()
-		// if compiler.currentToken.Type == scanner.TOKEN_EOF {
-		// 	return
-		// }
-		// if compiler.currentToken.Type == scanner.TOKEN_RIGHT_PAREN {
-		// 	return
-		// }
 		rule := compiler.getRule(compiler.previousToken.Type)
 		rule.infix()
 	}
