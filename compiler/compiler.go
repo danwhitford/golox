@@ -10,15 +10,33 @@ import (
 )
 
 type Compiler struct {
-	Scnr         *scanner.Scanner
-	CurrentChunk chunk.Chunk
-	token        scanner.Token
+	Scnr          *scanner.Scanner
+	CurrentChunk  chunk.Chunk
+	currentToken  scanner.Token
+	previousToken scanner.Token
 }
 
 type parseRule struct {
-	prefix func()
-	infix  func()
+	prefix     func()
+	infix      func()
+	precedence precedence
 }
+
+type precedence int
+
+const (
+	PREC_NONE       precedence = iota
+	PREC_ASSIGNMENT            // =
+	PREC_OR                    // or
+	PREC_AND                   // and
+	PREC_EQUALITY              // == !=
+	PREC_COMPARISON            // < > <= >=
+	PREC_TERM                  // + -
+	PREC_FACTOR                // * /
+	PREC_UNARY                 // ! -
+	PREC_CALL                  // . ()
+	PREC_PRIMARY
+)
 
 func Init(source string) *Compiler {
 	return &Compiler{
@@ -26,89 +44,110 @@ func Init(source string) *Compiler {
 	}
 }
 
+func (compiler *Compiler) advance() {
+	compiler.previousToken = compiler.currentToken
+	compiler.currentToken = compiler.Scnr.ScanToken()
+}
+
 func (compiler *Compiler) getRule(t scanner.TokenType) parseRule {
 	switch t {
 	case scanner.TOKEN_MINUS:
-		return parseRule{compiler.unary, compiler.binary}
+		return parseRule{compiler.unary, compiler.binary, PREC_TERM}
 	case scanner.TOKEN_NUMBER:
-		return parseRule{compiler.number, nil}
-	case scanner.TOKEN_PLUS, scanner.TOKEN_STAR, scanner.TOKEN_SLASH:
-		return parseRule{nil, compiler.binary}
+		return parseRule{compiler.number, nil, PREC_NONE}
+	case scanner.TOKEN_PLUS:
+		return parseRule{nil, compiler.binary, PREC_TERM}
+	case scanner.TOKEN_STAR, scanner.TOKEN_SLASH:
+		return parseRule{nil, compiler.binary, PREC_FACTOR}
 	case scanner.TOKEN_LEFT_PAREN:
-		return parseRule{compiler.grouping, nil}
+		return parseRule{compiler.grouping, nil, PREC_NONE}
+	case scanner.TOKEN_EOF, scanner.TOKEN_RIGHT_PAREN:
+		return parseRule{nil, nil, PREC_NONE}
 	}
+	fmt.Printf("%#v\n", compiler)
 	panic("don't know rule for " + t.String())
 }
 
 func (compiler *Compiler) unary() {
-	compiler.token = compiler.Scnr.ScanToken()
-	compiler.parseWithPrecedence()
-	compiler.CurrentChunk.WriteCode(chunk.OP_NEGATE, compiler.token.Line)
+	compiler.parseWithPrecedence(PREC_UNARY)
+	compiler.CurrentChunk.WriteCode(chunk.OP_NEGATE, compiler.currentToken.Line)
 }
 
 func (compiler *Compiler) binary() {
-	infixer := compiler.token
-	compiler.token = compiler.Scnr.ScanToken()
-	compiler.parseWithPrecedence()
-	switch infixer.Type {
+	infixer := compiler.previousToken.Type
+	rule := compiler.getRule(infixer)
+	compiler.parseWithPrecedence(rule.precedence + 1)
+
+	switch infixer {
 	case scanner.TOKEN_PLUS:
-		compiler.CurrentChunk.WriteCode(chunk.OP_ADD, compiler.token.Line)
+		compiler.CurrentChunk.WriteCode(chunk.OP_ADD, compiler.currentToken.Line)
 	case scanner.TOKEN_MINUS:
-		compiler.CurrentChunk.WriteCode(chunk.OP_SUB, compiler.token.Line)
+		compiler.CurrentChunk.WriteCode(chunk.OP_SUB, compiler.currentToken.Line)
 	case scanner.TOKEN_STAR:
-		compiler.CurrentChunk.WriteCode(chunk.OP_MULT, compiler.token.Line)
+		compiler.CurrentChunk.WriteCode(chunk.OP_MULT, compiler.currentToken.Line)
 	case scanner.TOKEN_SLASH:
-		compiler.CurrentChunk.WriteCode(chunk.OP_DIV, compiler.token.Line)
+		compiler.CurrentChunk.WriteCode(chunk.OP_DIV, compiler.currentToken.Line)
 	default:
-		panic("don't know infix for '" + infixer.Lexeme + "'")
+		panic("don't know infix for '" + infixer.String() + "'")
 	}
 }
 
 func (compiler *Compiler) number() {
-	f, err := strconv.ParseFloat(compiler.token.Lexeme, 64)
+	f, err := strconv.ParseFloat(compiler.previousToken.Lexeme, 64)
 	if err != nil {
 		panic(fmt.Sprintf("float parse error. %v", err))
 	}
-	compiler.CurrentChunk.WriteConstant(value.Value(f), compiler.token.Line)
+	compiler.CurrentChunk.WriteConstant(value.Value(f), compiler.currentToken.Line)
 }
 
 func (compiler *Compiler) grouping() {
-	compiler.token = compiler.Scnr.ScanToken()
 	compiler.expression()
+	compiler.consume(scanner.TOKEN_RIGHT_PAREN)
+}
+
+func (compiler *Compiler) consume(t scanner.TokenType) {
+	if compiler.currentToken.Type == t {
+		compiler.advance()
+		return
+	}
+	panic("wanted '" + t.String() + "' but got '" + compiler.currentToken.Type.String() + "'")
 }
 
 func (compiler *Compiler) expression() {
-	compiler.parseWithPrecedence()
+	compiler.parseWithPrecedence(PREC_ASSIGNMENT)
 }
 
-func (compiler *Compiler) parseWithPrecedence() {
-	rule := compiler.getRule(compiler.token.Type)
+func (compiler *Compiler) parseWithPrecedence(prec precedence) {
+	compiler.advance()
+	rule := compiler.getRule(compiler.previousToken.Type)
 	rule.prefix()
 
-	for {
-		compiler.token = compiler.Scnr.ScanToken()
-		if compiler.token.Type == scanner.TOKEN_EOF {
-			return
-		}
-		if compiler.token.Type == scanner.TOKEN_RIGHT_PAREN {
-			return
-		}
-		rule := compiler.getRule(compiler.token.Type)
+	for prec <= compiler.getRule(compiler.currentToken.Type).precedence {
+		compiler.advance()
+		// if compiler.currentToken.Type == scanner.TOKEN_EOF {
+		// 	return
+		// }
+		// if compiler.currentToken.Type == scanner.TOKEN_RIGHT_PAREN {
+		// 	return
+		// }
+		rule := compiler.getRule(compiler.previousToken.Type)
 		rule.infix()
 	}
 }
 
 func (compiler *Compiler) Compile(source string) chunk.Chunk {
-	for {
-		compiler.token = compiler.Scnr.ScanToken()
-
-		if compiler.token.Type == scanner.TOKEN_EOF {
-			compiler.CurrentChunk.WriteCode(chunk.OP_RETURN, compiler.token.Line)
-			break
-		}
-
-		compiler.parseWithPrecedence()
+	if len(source) < 1 {
+		compiler.CurrentChunk.WriteCode(chunk.OP_RETURN, compiler.currentToken.Line)
+		return compiler.CurrentChunk
 	}
 
-	return compiler.CurrentChunk
+	compiler.advance()    // prime the pump
+	compiler.expression() // read the expression
+
+	if compiler.currentToken.Type == scanner.TOKEN_EOF {
+		compiler.CurrentChunk.WriteCode(chunk.OP_RETURN, compiler.currentToken.Line)
+		return compiler.CurrentChunk
+	} else {
+		panic("expected 'EOF' but got '" + compiler.currentToken.Type.String() + "'")
+	}
 }
