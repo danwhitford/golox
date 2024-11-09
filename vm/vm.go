@@ -97,7 +97,14 @@ func (vm *Vm) Run() InterpretResult {
 				if err != nil {
 					return INTERPRET_RUNTIME_ERROR
 				}
-				v.As = -(v.AsNumber())
+				switch v.T {
+				case value.VAL_NUMBER:
+					v.As = -(v.AsNumber())
+				case value.VAL_BOOL:
+					v.As = !(v.AsBool())
+				default:
+					panic(fmt.Sprintf("don't know how to negate '%v'", v))
+				}
 				vm.Stack.Push(v)
 			}
 		case chunk.OP_RETURN:
@@ -106,9 +113,55 @@ func (vm *Vm) Run() InterpretResult {
 				if err != nil {
 					return INTERPRET_RUNTIME_ERROR
 				}
-				fmt.Fprintln(vm.Out, v.As)
+				switch v.T {
+				case value.VAL_NIL:
+					fmt.Fprintln(vm.Out, "nil")
+				default:
+					fmt.Fprintln(vm.Out, v.As)
+				}
 			}
 			return INTERPRET_OK
+		case chunk.OP_FALSE:
+			vm.Stack = append(vm.Stack, value.BoolVal(false))
+		case chunk.OP_TRUE:
+			vm.Stack = append(vm.Stack, value.BoolVal(true))
+		case chunk.OP_NIL:
+			vm.Stack = append(vm.Stack, value.NilVal())
+		case chunk.OP_LESS:
+			b, err := vm.Stack.Pop()
+			if err != nil {
+				panic(err)
+			}
+			a, err := vm.Stack.Pop()
+			if err != nil {
+				panic(err)
+			}
+			res := a.AsNumber() < b.AsNumber()
+			vm.Stack.Push(value.BoolVal(res))
+		case chunk.OP_GREATER:
+			b, err := vm.Stack.Pop()
+			if err != nil {
+				panic(err)
+			}
+			a, err := vm.Stack.Pop()
+			if err != nil {
+				panic(err)
+			}
+			res := a.AsNumber() > b.AsNumber()
+			vm.Stack.Push(value.BoolVal(res))
+		case chunk.OP_EQUAL:
+			b, err := vm.Stack.Pop()
+			if err != nil {
+				panic(err)
+			}
+			a, err := vm.Stack.Pop()
+			if err != nil {
+				panic(err)
+			}
+			res := a.As == b.As
+			vm.Stack.Push(value.BoolVal(res))
+		default:
+			panic(fmt.Sprintf("don't know how to handle OP CODE '%v'", instruction))
 		}
 	}
 }

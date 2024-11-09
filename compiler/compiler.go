@@ -63,6 +63,14 @@ func (compiler *Compiler) getRule(t scanner.TokenType) parseRule {
 		return parseRule{compiler.grouping, nil, PREC_NONE}
 	case scanner.TOKEN_EOF, scanner.TOKEN_RIGHT_PAREN:
 		return parseRule{nil, nil, PREC_NONE}
+	case scanner.TOKEN_FALSE, scanner.TOKEN_TRUE, scanner.TOKEN_NIL:
+		return parseRule{compiler.literal, nil, PREC_NONE}
+	case scanner.TOKEN_BANG:
+		return parseRule{compiler.unary, nil, PREC_NONE}
+	case scanner.TOKEN_EQUAL_EQUAL, scanner.TOKEN_BANG_EQUAL:
+		return parseRule{nil, compiler.binary, PREC_EQUALITY}
+	case scanner.TOKEN_GREATER, scanner.TOKEN_GREATER_EQUAL, scanner.TOKEN_LESS, scanner.TOKEN_LESS_EQUAL:
+		return parseRule{nil, compiler.binary, PREC_COMPARISON}
 	}
 	fmt.Printf("%#v\n", compiler)
 	panic("don't know rule for " + t.String())
@@ -80,13 +88,25 @@ func (compiler *Compiler) binary() {
 
 	switch infixer {
 	case scanner.TOKEN_PLUS:
-		compiler.CurrentChunk.WriteCode(chunk.OP_ADD, compiler.currentToken.Line)
+		compiler.writeOpCode(chunk.OP_ADD)
 	case scanner.TOKEN_MINUS:
-		compiler.CurrentChunk.WriteCode(chunk.OP_SUB, compiler.currentToken.Line)
+		compiler.writeOpCode(chunk.OP_SUB)
 	case scanner.TOKEN_STAR:
-		compiler.CurrentChunk.WriteCode(chunk.OP_MULT, compiler.currentToken.Line)
+		compiler.writeOpCode(chunk.OP_MULT)
 	case scanner.TOKEN_SLASH:
-		compiler.CurrentChunk.WriteCode(chunk.OP_DIV, compiler.currentToken.Line)
+		compiler.writeOpCode(chunk.OP_DIV)
+	case scanner.TOKEN_BANG_EQUAL:
+		compiler.writeOpCodes(chunk.OP_EQUAL, chunk.OP_NEGATE)
+	case scanner.TOKEN_LESS:
+		compiler.writeOpCode(chunk.OP_LESS)
+	case scanner.TOKEN_GREATER:
+		compiler.writeOpCode(chunk.OP_GREATER)
+	case scanner.TOKEN_EQUAL_EQUAL:
+		compiler.writeOpCode(chunk.OP_EQUAL)
+	case scanner.TOKEN_GREATER_EQUAL:
+		compiler.writeOpCodes(chunk.OP_LESS, chunk.OP_NEGATE)
+	case scanner.TOKEN_LESS_EQUAL:
+		compiler.writeOpCodes(chunk.OP_GREATER, chunk.OP_NEGATE)
 	default:
 		panic("don't know infix for '" + infixer.String() + "'")
 	}
@@ -105,6 +125,28 @@ func (compiler *Compiler) grouping() {
 	compiler.consume(scanner.TOKEN_RIGHT_PAREN)
 }
 
+func (compiler *Compiler) literal() {
+	switch compiler.previousToken.Type {
+	case scanner.TOKEN_FALSE:
+		compiler.writeOpCode(chunk.OP_FALSE)
+	case scanner.TOKEN_TRUE:
+		compiler.writeOpCode(chunk.OP_TRUE)
+	case scanner.TOKEN_NIL:
+		compiler.writeOpCode(chunk.OP_NIL)
+	default:
+		panic(fmt.Sprintf("'%v' is not a literal type", compiler.previousToken.Type))
+	}
+}
+
+func (compiler *Compiler) writeOpCode(op chunk.OpCode) {
+	compiler.CurrentChunk.WriteCode(op, compiler.currentToken.Line)
+}
+
+func (compiler *Compiler) writeOpCodes(a, b chunk.OpCode) {
+	compiler.writeOpCode(a)
+	compiler.writeOpCode(b)
+}
+
 func (compiler *Compiler) consume(t scanner.TokenType) {
 	if compiler.currentToken.Type == t {
 		compiler.advance()
@@ -120,6 +162,9 @@ func (compiler *Compiler) expression() {
 func (compiler *Compiler) parseWithPrecedence(prec precedence) {
 	compiler.advance()
 	rule := compiler.getRule(compiler.previousToken.Type)
+	if rule.prefix == nil {
+		panic(fmt.Sprintf("no prefix rule for '%v'", compiler.previousToken.Type))
+	}
 	rule.prefix()
 
 	for prec <= compiler.getRule(compiler.currentToken.Type).precedence {

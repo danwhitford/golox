@@ -172,6 +172,33 @@ func TestCompile(t *testing.T) {
 				},
 			},
 		},
+		{
+			"false", // 2 NEGATE 5 +
+			chunk.Chunk{
+				Code: []byte{
+					byte(chunk.OP_FALSE),
+					byte(chunk.OP_RETURN),
+				},
+			},
+		},
+		{
+			"true", // 2 NEGATE 5 +
+			chunk.Chunk{
+				Code: []byte{
+					byte(chunk.OP_TRUE),
+					byte(chunk.OP_RETURN),
+				},
+			},
+		},
+		{
+			"nil", // 2 NEGATE 5 +
+			chunk.Chunk{
+				Code: []byte{
+					byte(chunk.OP_NIL),
+					byte(chunk.OP_RETURN),
+				},
+			},
+		},
 	}
 
 	opts := cmpopts.IgnoreFields(chunk.Chunk{}, "Lines")

@@ -122,3 +122,68 @@ func TestBinaryOpsOl(t *testing.T) {
 		}
 	}
 }
+
+func TestLiterals(t *testing.T) {
+	table := []struct {
+		input string
+		want  string
+	}{
+		{"false", "false"},
+		{"true", "true"},
+		{"nil", "nil"},
+	}
+
+	for _, tst := range table {
+		var buff bytes.Buffer
+		var vm Vm
+		vm.Out = &buff
+		stat := vm.Interpret(tst.input)
+
+		if stat != INTERPRET_OK {
+			t.Errorf("not ok '%v'", stat)
+		}
+
+		want := tst.want + "\n"
+		got := buff.String()
+
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("Mismatch (-want +got):\n%s", diff)
+		}
+	}
+}
+
+func TestEqualityOps(t *testing.T) {
+	table := []struct {
+		input string
+		want  string
+	}{
+		{"!false", "true"},
+		{"!true", "false"},
+		{"10 < 100", "true"},
+		{"10 > 100", "false"},
+		{"10 == 10", "true"},
+		{"10 <= 11", "true"},
+		{"10 <= 10", "true"},
+		{"10 >= 9", "true"},
+		{"10 >= 10", "true"},
+		{"10 != 10", "false"},
+	}
+
+	for _, tst := range table {
+		var buff bytes.Buffer
+		var vm Vm
+		vm.Out = &buff
+		stat := vm.Interpret(tst.input)
+
+		if stat != INTERPRET_OK {
+			t.Errorf("not ok '%v'", stat)
+		}
+
+		want := tst.want + "\n"
+		got := buff.String()
+
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("Mismatch (-want +got) for '%v':\n%s", tst.input, diff)
+		}
+	}
+}
